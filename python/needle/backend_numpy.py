@@ -37,7 +37,9 @@ class CPUDevice(Device):
         # note: numpy doesn't support types within standard random routines, and
         # .astype("float32") does work if we're generating a singleton
         return numpy.random.rand(*shape)
-
+    
+    def rand_binomial(self, size, n, p):
+        return numpy.random.binomial(n, p, size)
     def one_hot(self, n, i, dtype="float32"):
         return numpy.eye(n, dtype=dtype)[i]
 

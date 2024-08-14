@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/root/hw4/build",
+  "command": "/usr/bin/c++ -Dndarray_backend_cpu_EXPORTS -isystem /root/miniconda3/include/python3.8 -isystem /root/miniconda3/lib/python3.8/site-packages/pybind11/include -isystem /usr/local/cuda/include -std=c++11 -O2 -march=native  -g -fPIC -fvisibility=hidden -o CMakeFiles/ndarray_backend_cpu.dir/src/ndarray_backend_cpu.cc.o -c /root/hw4/src/ndarray_backend_cpu.cc",
+  "file": "/root/hw4/src/ndarray_backend_cpu.cc",
+  "output": "CMakeFiles/ndarray_backend_cpu.dir/src/ndarray_backend_cpu.cc.o"
+}
+]

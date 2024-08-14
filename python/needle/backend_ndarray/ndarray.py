@@ -247,7 +247,12 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_size = prod(new_shape)
+        if self.size != new_size:
+            raise ValueError(f"current size: {self.size} is not equal to new_shape:{new_size}!")
+        if not self.is_compact():
+            raise ValueError("current matrix is not compact")
+        return NDArray.make(new_shape, device=self.device, handle=self._handle)
         ### END YOUR SOLUTION
 
     def permute(self, new_axes):
@@ -272,7 +277,9 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = tuple(np.array(self.shape)[list(new_axes)])
+        new_stride = tuple(np.array(self.strides)[list(new_axes)])
+        return NDArray.make(new_shape, new_stride, self.device, self._handle)
         ### END YOUR SOLUTION
 
     def broadcast_to(self, new_shape):
@@ -296,7 +303,17 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_ndim = len(new_shape)
+        strides = list(self.strides)
+        if self.ndim != new_ndim:
+            raise ValueError(f"new dim{new_ndim} is not equal to old dim {self.ndim}")
+        for i in range(len(new_shape)):
+            if self.shape[i] != 1:
+                if self.shape[i] != new_shape[i]:
+                    raise ValueError(f"new shape: {new_shape} is not equal to shape:{self.shape} at {i}")
+            else:
+                strides[i] = 0
+        return NDArray.make(new_shape, strides= tuple(strides), device=self.device, handle=self._handle)
         ### END YOUR SOLUTION
 
     ### Get and set elements
@@ -350,7 +367,6 @@ class NDArray:
             manipulate the shape/strides/offset of the new array, referecing
             the same array as the original one.
         """
-
         # handle singleton as tuple, everything as slices
         if not isinstance(idxs, tuple):
             idxs = (idxs,)
@@ -363,7 +379,10 @@ class NDArray:
         assert len(idxs) == self.ndim, "Need indexes equal to number of dimensions"
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape=tuple([(sl.stop - sl.start + sl.step - 1) // sl.step for sl in idxs])
+        new_offset = np.sum(np.array([sl.start * st for sl, st in zip(idxs, self.strides)]))
+        new_strides = tuple([st * sl.step for st, sl in zip(self.strides, idxs)])
+        return NDArray.make(new_shape, new_strides, device=self.device, handle=self._handle, offset=new_offset)
         ### END YOUR SOLUTION
 
     def __setitem__(self, idxs, other):

@@ -8,6 +8,10 @@ def rand(*shape, low=0.0, high=1.0, device=None, dtype="float32", requires_grad=
     array = device.rand(*shape) * (high - low) + low
     return ndl.Tensor(array, device=device, dtype=dtype, requires_grad=requires_grad)
 
+def rand_binomial(n, p, size, device=None, dtype="float32", requires_grad=False):
+    device = ndl.cpu() if device is None else device
+    array = device.rand_binomial(size, n, p)
+    return ndl.Tensor(array, device=device, dtype=dtype, requires_grad=requires_grad)
 
 def randn(*shape, mean=0.0, std=1.0, device=None, dtype="float32", requires_grad=False):
     """Generate random normal with specified mean and std deviation"""
@@ -16,12 +20,12 @@ def randn(*shape, mean=0.0, std=1.0, device=None, dtype="float32", requires_grad
     return ndl.Tensor(array, device=device, dtype=dtype, requires_grad=requires_grad)
 
 
-
 def constant(*shape, c=1.0, device=None, dtype="float32", requires_grad=False):
     """Generate constant Tensor"""
     device = ndl.cpu() if device is None else device
-    array = device.full(shape, c, dtype=dtype)
+    array = device.ones(*shape, dtype=dtype) * c  # note: can change dtype
     return ndl.Tensor(array, device=device, dtype=dtype, requires_grad=requires_grad)
+
 
 def ones(*shape, device=None, dtype="float32", requires_grad=False):
     """Generate all-ones Tensor"""
@@ -48,7 +52,7 @@ def one_hot(n, i, device=None, dtype="float32", requires_grad=False):
     """Generate one-hot encoding Tensor"""
     device = ndl.cpu() if device is None else device
     return ndl.Tensor(
-        device.one_hot(n, i.numpy().astype("int32"), dtype=dtype),
+        device.one_hot(n, i.numpy(), dtype=dtype),
         device=device,
         requires_grad=requires_grad,
     )
