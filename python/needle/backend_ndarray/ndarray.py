@@ -54,6 +54,8 @@ class BackendDevice:
         arr = self.empty(shape, dtype)
         arr.fill(fill_value)
         return arr
+    def ones(self, *shape, dtype="float32"):
+        return self.full(list(shape), 1.0)
 
 
 def cuda():

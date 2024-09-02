@@ -14,9 +14,6 @@ TENSOR_COUNTER = 0
 # NOTE: we will import numpy as the array_api
 # as the backend for our computations, this line will change in later homeworks
 
-import numpy as array_api
-NDArray = numpy.ndarray
-
 from .backend_selection import array_api, NDArray, default_device
 
 class Op:
@@ -382,7 +379,7 @@ def compute_gradient_of_variables(output_tensor, out_grad):
 
     ### BEGIN YOUR SOLUTION
     for t in reverse_topo_order:
-        grad_t = sum(node_to_output_grads_list[t])
+        grad_t = sum_node_list(node_to_output_grads_list[t])
         t.grad = grad_t
         if t.op != None:
             input_grads = t.op.gradient_as_tuple(grad_t, t)

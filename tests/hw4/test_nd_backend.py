@@ -141,7 +141,6 @@ def test_tanh_backward(shape, device):
     A = ndl.Tensor(nd.array(_A), device=device)
     backward_check(ndl.tanh, A)
 
-
 STACK_PARAMETERS = [((5, 5), 0, 1),
     ((5, 5), 0, 2),
     ((1,5,7), 2, 5)]
@@ -189,6 +188,15 @@ def test_summation_backward(shape, axes, device):
     _A = np.random.randn(*shape).astype(np.float32)
     A = ndl.Tensor(nd.array(_A), device=device)
     backward_check(ndl.summation, A, axes=axes)
+
+
+@pytest.mark.parametrize("shape, axes", SUMMATION_PARAMETERS)
+@pytest.mark.parametrize("device", _DEVICES, ids=["cpu", "cuda"])
+def test_logsumexp_backward(shape, axes, device):
+    _A = np.random.randn(*shape).astype(np.float32)
+    A = ndl.Tensor(nd.array(_A), device=device)
+    backward_check(ndl.logsumexp, A, axes=axes)
+
 
 
 BROADCAST_SHAPES = [((1, 1, 1), (3, 3, 3)),

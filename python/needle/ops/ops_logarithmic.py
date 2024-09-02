@@ -5,7 +5,7 @@ from ..autograd import TensorTuple, TensorTupleOp
 
 from .ops_mathematic import *
 
-import numpy as array_api
+from ..backend_selection import array_api, BACKEND 
 
 class LogSoftmax(TensorOp):
     def compute(self, Z):
@@ -29,21 +29,36 @@ class LogSumExp(TensorOp):
 
     def compute(self, Z):
         ### BEGIN YOUR SOLUTION
-        max_Z_original = array_api.max(Z, axis=self.axes, keepdims=True)
-        max_Z = array_api.max(Z, axis=self.axes)
-        out = array_api.log(array_api.sum(array_api.exp(Z - max_Z_original), axis=self.axes)) + max_Z
-        return out
+        max_Z_original = Z.max(axis=self.axes, keepdims=True)
+        if self.axes is None:
+            new_shape = [max_Z_original.shape[i] if i < max_Z_original.ndim else 1 for i in range(Z.ndim)]
+            max_Z_original = max_Z_original.reshape(new_shape)
+        max_Z_original = max_Z_original.broadcast_to(Z.shape)
+        max_Z = Z.max(axis=self.axes)
+        sub_Z = Z - max_Z_original
+        exp_sub_Z = sub_Z.exp()
+        sum_exp_sub_Z = exp_sub_Z.sum(axis=self.axes)
+        return sum_exp_sub_Z.log() + max_Z
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
         z = node.inputs[0]
         max_z = z.realize_cached_data().max(axis=self.axes, keepdims=True)
+        z_shape = z.shape
+        z_dim = len(z_shape)
+        max_z_dim = len(max_z.shape)
+        if self.axes is None:
+            new_shape = [max_z.shape[i] if i < max_z_dim else 1 for i in range(z_dim)]
+            max_z = max_z.reshape(new_shape)
+        max_z = max_z.broadcast_to(z_shape)
         exp_z = exp(z - max_z)
         sum_exp_z = summation(exp_z, axes=self.axes)
         grad = out_grad / sum_exp_z
         expand_shape = list(z.shape)
         axes = range(len(expand_shape)) if self.axes is None else self.axes
+        if type(self.axes) == int:
+            axes = [self.axes]
         for axe in axes:
             expand_shape[axe] = 1
         grad = grad.reshape(expand_shape).broadcast_to(z.shape)

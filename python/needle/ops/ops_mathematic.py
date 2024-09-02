@@ -31,7 +31,7 @@ class AddScalar(TensorOp):
         self.scalar = scalar
 
     def compute(self, a: NDArray):
-        return array_api.add(a, self.scalar, dtype=a.dtype)
+        return a + self.scalar
 
     def gradient(self, out_grad: Tensor, node: Tensor):
         return out_grad
@@ -77,7 +77,7 @@ class PowerScalar(TensorOp):
 
     def compute(self, a: NDArray) -> NDArray:
         ### BEGIN YOUR SOLUTION
-        return array_api.power(a, self.scalar)
+        return a ** self.scalar
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -116,7 +116,7 @@ class EWiseDiv(TensorOp):
 
     def compute(self, a, b):
         ### BEGIN YOUR SOLUTION
-        return array_api.divide(a, b)
+        return a / b
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -137,9 +137,7 @@ class DivScalar(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        scaler = self.scalar
-        out = array_api.divide(a, scaler, dtype=a.dtype)
-        return out
+        return a / self.scalar
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -158,10 +156,17 @@ class Transpose(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
+        new_axes = list(range(a.ndim))
         if self.axes:
-            return array_api.swapaxes(a, self.axes[0], self.axes[1])
+            new_axes[self.axes[0]] = self.axes[1]
+            new_axes[self.axes[1]] = self.axes[0]
+            print(new_axes)
+           
         else:
-            return array_api.swapaxes(a, a.ndim - 2, a.ndim - 1)
+            new_axes[a.ndim - 2] = a.ndim - 1
+            new_axes[a.ndim - 1] = a.ndim - 2
+            print(new_axes)
+        return a.permute(new_axes)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
@@ -238,6 +243,8 @@ class Summation(TensorOp):
         new_shape = list(node.inputs[0].shape)
         axes = range(len(new_shape)) if self.axes is None else self.axes
         # add ones to reduced idx for broadcast
+        if type(self.axes) == int:
+            axes = [self.axes]
         for axis in axes:
             new_shape[axis] = 1
         return out_grad.reshape(new_shape).broadcast_to(node.inputs[0].shape)
@@ -340,12 +347,12 @@ def relu(a):
 class Tanh(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return array_api.tanh(a)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return out_grad * (1 - tanh(node.inputs[0]) ** 2)
         ### END YOUR SOLUTION
 
 
@@ -363,15 +370,31 @@ class Stack(TensorOp):
         """
         self.axis = axis
 
-    def compute(self, args: TensorTuple) -> Tensor:
+    def compute(self, args) -> Tensor:
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        # check the shape
+        assert len(args) > 0, "args must not be empty!"
+        shape = args[0].shape
+        n = len(args)
+        for arg in args:
+            assert arg.shape == shape, "all tensor must has same shape!"
+        # get new shape
+        new_shape = list(shape)
+        new_shape.insert(self.axis, n)
+        
+        # create an new array and insert items
+        out = array_api.empty(tuple(new_shape), dtype=args[0].dtype, device=args[0].device)
+        slices = [slice(0, s) for s in new_shape]
+        for i, arr in enumerate(args):
+            slices[self.axis] = slice(i, i + 1)
+            out[tuple(slices)] = arr
+        return out
         ### END YOUR SOLUTION
 
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return split(out_grad, self.axis)
         ### END YOUR SOLUTION
 
 
@@ -391,12 +414,20 @@ class Split(TensorTupleOp):
 
     def compute(self, A):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        new_shape = list(A.shape)
+        n = new_shape[self.axis]
+        new_shape.pop(self.axis)
+        slices = [slice(0, s) for s in A.shape]
+        splited = []
+        for i in range(n):
+            slices[self.axis] = slice(i, i + 1)
+            splited.append(A[tuple(slices)].compact().reshape(new_shape))
+        return tuple(splited)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return stack(out_grad, self.axis)
         ### END YOUR SOLUTION
 
 

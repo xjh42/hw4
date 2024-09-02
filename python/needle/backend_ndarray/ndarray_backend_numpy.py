@@ -28,7 +28,6 @@ def from_numpy(a, out):
 def fill(out, val):
     out.array.fill(val)
 
-
 def compact(a, out, shape, strides, offset):
     out.array[:] = to_numpy(a, shape, strides, offset).flatten()
 

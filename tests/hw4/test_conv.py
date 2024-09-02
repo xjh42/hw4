@@ -81,6 +81,9 @@ def test_stack_forward(params, device):
 
     lhs = np.stack(to_stack_npy, axis=axis)
     rhs = ndl.stack(to_stack_ndl, axis=axis)
+    assert np.linalg.norm(lhs - rhs.numpy()) < 1e-4
+
+
 
 
 pad_params = [
