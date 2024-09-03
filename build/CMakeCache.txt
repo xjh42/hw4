@@ -651,6 +651,8 @@ _Python_INCLUDE_DIR:INTERNAL=/root/miniconda3/include/python3.8
 //Python Properties
 _Python_INTERPRETER_PROPERTIES:INTERNAL=Python;3;8;10;64;;cpython-38-x86_64-linux-gnu;abi3;/root/miniconda3/lib/python3.8;/root/miniconda3/lib/python3.8;/root/miniconda3/lib/python3.8/site-packages;/root/miniconda3/lib/python3.8/site-packages
 _Python_INTERPRETER_SIGNATURE:INTERNAL=9500796ca39692ca982811912243f906
+//Interpreter reason failure
+_Python_Interpreter_REASON_FAILURE:INTERNAL=
 //Path to a library.
 _Python_LIBRARY_RELEASE:INTERNAL=/root/miniconda3/lib/libpython3.8.so
 //NumPy reason failure
