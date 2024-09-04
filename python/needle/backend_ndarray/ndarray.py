@@ -392,7 +392,7 @@ class NDArray:
         as __getitem__()."""
         view = self.__getitem__(idxs)
         if isinstance(other, NDArray):
-            assert prod(view.shape) == prod(other.shape)
+            assert prod(view.shape) == prod(other.shape), f"view.shape: {view.shape}, other.shape: {other.shape}"
             self.device.ewise_setitem(
                 other.compact()._handle,
                 view._handle,

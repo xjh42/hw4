@@ -461,12 +461,26 @@ class Dilate(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if self.dilation == 0:
+            return a
+        new_shape = list(a.shape)
+        for axe in self.axes:
+            if axe >= len(a.shape):
+                continue
+            new_shape[axe] = new_shape[axe] * (self.dilation + 1)
+        slices = [slice(0, s) for s in new_shape]
+        for axe in self.axes:
+            if axe >= len(a.shape):
+                continue
+            slices[axe] = slice(0, new_shape[axe] - self.dilation, self.dilation + 1)
+        out = array_api.full(tuple(new_shape), 0.0, dtype=a.dtype, device=a.device)
+        out[tuple(slices)] = a
+        return out
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return undilate(out_grad, self.axes, self.dilation)
         ### END YOUR SOLUTION
 
 
@@ -481,12 +495,17 @@ class UnDilate(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if self.dilation == 0:
+            return a
+        slices = [slice(0, s) for s in a.shape]
+        for axe in self.axes:
+            slices[axe] = slice(0, a.shape[axe], self.dilation + 1)
+        return a[tuple(slices)].compact()
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return dilate(out_grad, self.axes, self.dilation)
         ### END YOUR SOLUTION
 
 
@@ -501,12 +520,33 @@ class Conv(TensorOp):
 
     def compute(self, A, B):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        A = A.pad(((0,0), (self.padding, self.padding), (self.padding, self.padding), (0, 0)))
+        N, H, W, C_in = A.shape
+        K, _, _, C_out = B.shape
+        Ns, Hs, Ws, Cs = A.strides
+        out_H = (H - K + 1) // self.stride
+        out_W = (W - K + 1) // self.stride
+        inner_dim = K * K * C_in
+        im2col = A.as_strided((N, out_H, out_W, K, K, C_in), (Ns, Hs * self.stride, Ws * self.stride, Hs, Ws, Cs))\
+              .compact()\
+              .reshape((N * out_H * out_W, inner_dim))
+        Z = im2col @ (B.compact().reshape((inner_dim, C_out)))
+        return Z.compact().reshape((N, out_H, out_W, C_out))
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        X = node.inputs[0]
+        W = node.inputs[1]
+        N, H, W, C_in = X.shape
+        N, H_out, W_out, C_out = out_grad.shape
+        H_padding = H - H_out
+        W_padding = W - W_out
+        assert H_padding == W_padding, "padding size must be same!"
+        W_flipped = flip(W, tuple(list(range(W.shape))))
+        X_grad = conv(out_grad, W_flipped, stride=1, padding=H_padding - self.padding)
+        
+        
         ### END YOUR SOLUTION
 
 
